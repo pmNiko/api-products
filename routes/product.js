@@ -13,5 +13,9 @@ var router = express.Router();
 router.get('/home', ProductController.home);
 router.post('/test', ProductController.test);
 router.post('/save-product', ProductController.saveProduct);
+router.get('/product/:id?', ProductController.getProduct);
+router.get('/products', ProductController.getProducts);
+router.put('/update-product/:id', ProductController.updateProduct);
+router.delete('/delete-product/:id', ProductController.deleteProduct);
 
 module.exports = router;
