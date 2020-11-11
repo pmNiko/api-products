@@ -8,10 +8,10 @@ var fs = require("fs");
 const controller = {
   //---- Guardar un Producto Nuevo ----//
   saveProduct: function (req, res) {
-    var product = new Product();
+    const product = new Product();
 
     // Destructuring del objeto req.body
-    var {
+    const {
       name,
       category,
       sub_category,
@@ -31,23 +31,14 @@ const controller = {
     // Utilizamos la función save() que tiene asociada product
     // la cual tendra como respuesta un error o el obj guardado
     product.save((error, product) => {
-      if (error)
-        return res.status(500).send({
-          message: "Error en la petición al servidor!",
-        });
-      if (!product)
-        return res.status(404).send({
-          message: "Error al guardar el producto!",
-        });
-      console.log(product);
-      return res.status(200).send({ product_id: product._id });
+      resServer(res, error, product);
     });
   },
 
   //---- Buscar un Producto por parametro ----//
   getProduct: function (req, res) {
     // capturo el id que llega por params
-    var productId = req.params.id;
+    const productId = req.params.id;
 
     // chequeo que no sea null
     if (productId == null)
@@ -57,37 +48,21 @@ const controller = {
 
     // Busco el producto por id
     Product.findById(productId, (error, product) => {
-      if (error)
-        return res.status(500).send({
-          message: "Error en la petición al servidor!",
-        });
-      if (!product)
-        return res.status(404).send({
-          message: "El producto no existe!",
-        });
-      return res.status(200).send({ product });
+      resServer(res, error, product);
     });
   },
 
   //---- Devolver todos los productos ----//
   getProducts: function (req, res) {
     Product.find({}).exec((error, products) => {
-      if (error)
-        return res.status(500).send({
-          message: "Error en la petición al servidor!",
-        });
-      if (!products)
-        return res.status(404).send({
-          message: "No hay productos que mostrar!",
-        });
-      return res.status(200).send({ products });
+      resServer(res, error, products);
     });
   },
 
   //---- Actualizar un Producto por parametro ----//
   updateProduct: function (req, res) {
-    var productId = req.params.id;
-    var update = req.body;
+    const productId = req.params.id;
+    const update = req.body;
     // Recibe el id que viene por params, los datos de actualización
     // y la variante {new:true} es para que devuelva el objeto actualizado
     Product.findByIdAndUpdate(
@@ -95,49 +70,33 @@ const controller = {
       update,
       { new: true },
       (error, product) => {
-        if (error)
-          return res.status(500).send({
-            message: "Error en la petición al servidor!",
-          });
-        if (!product)
-          return res.status(404).send({
-            message: "Error al actualizar!",
-          });
-        return res.status(200).send({ product });
+        resServer(res, error, product);
       }
     );
   },
 
   //---- Borrar un Producto por parametro ----//
   deleteProduct: function (req, res) {
-    var productId = req.params.id;
+    const productId = req.params.id;
 
     Product.findByIdAndDelete(productId, (error, product) => {
-      if (error)
-        return res.status(500).send({
-          message: "Error en la petición al servidor!",
-        });
-      if (!product)
-        return res.status(404).send({
-          message: "Error al borrar!",
-        });
-      return res.status(200).send({ product });
+      resServer(res, error, product);
     });
   },
 
   //---- Subir una imagen a un Producto ----//
   uploadImage: function (req, res) {
-    var product_id = req.params.id;
-    var fileName = "Imagen no seleccionada...";
+    const product_id = req.params.id;
+    const fileName = "Imagen no seleccionada...";
 
     //  capturamos el fichero con connect-multiparty
     if (req.files) {
-      var filePath = req.files.image.path; //path
-      var fileSplit = filePath.split("/"); //split
-      var fileName = fileSplit[1]; //ref en la posición 1
+      let filePath = req.files.image.path; //path
+      let fileSplit = filePath.split("/"); //split
+      let fileName = fileSplit[1]; //ref en la posición 1
 
-      var extSplit = fileName.split(".");
-      var fileExt = extSplit[1];
+      let extSplit = fileName.split(".");
+      let fileExt = extSplit[1];
 
       // Validación de la extención de la imagen
       if (
@@ -152,17 +111,7 @@ const controller = {
           { image: fileName }, // propiedad a modificar
           { new: true }, // devuelve el obj modificado
           (error, product) => {
-            if (error)
-              return res.status(500).send({
-                message: "Error en la petición al servidor!",
-              });
-            if (!product)
-              return res.status(404).send({
-                message: "Error al subir imagen!",
-              });
-            return res.status(200).send({
-              product: product,
-            });
+            resServer(res, error, product);
           }
         );
       } else {
@@ -183,11 +132,25 @@ const controller = {
       message: "Home de la app de backend",
     });
   },
-  test: function (req, res) {
-    return res.status(200).send({
-      message: "Test de la app de backend",
-    });
-  },
 };
 
 module.exports = controller;
+
+// ---- Funciones ----- //
+
+/*
+  Esta función abstrae la respuesta del servidor
+*/
+function resServer(res, error, recurso) {
+  if (error)
+    return res.status(500).send({
+      message: "Error en la petición al servidor! error 500",
+    });
+  if (!recurso)
+    return res.status(404).send({
+      message: "Recurso no encontrado error 404!",
+    });
+  console.log(recurso);
+
+  return res.status(200).send({ data: recurso });
+}
